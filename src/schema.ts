@@ -1,7 +1,7 @@
 import { createSchema } from 'graphql-yoga';
 import { finalize } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
-import { getPublisher } from './shared-subscriptions';
+import { giveMeIntsPublisher } from './shared-subscriptions';
 
 export const schema = createSchema({
   typeDefs: /* GraphQL */ `
@@ -9,7 +9,7 @@ export const schema = createSchema({
       hello: String
     }
     type Subscription {
-      mySubscription(entityId: ID!): Int!
+      giveMeInts(id: ID!): Int!
     }
   `,
   resolvers: {
@@ -17,19 +17,19 @@ export const schema = createSchema({
       hello: () => 'world',
     },
     Subscription: {
-      mySubscription: {
-        subscribe(source, { entityId }, context) {
+      giveMeInts: {
+        subscribe(source, { id }, context) {
           const userId = context.request.headers.get('user-id');
           return eachValueFrom(
-            getPublisher(entityId).pipe(
-              finalize(() => console.debug(`Subscription for [userId=${userId};entityId=${entityId}] has ended`)),
+            giveMeIntsPublisher(id).pipe(
+              finalize(() => console.debug(`Subscription giveMeInts for ${JSON.stringify({ userId, id })} has ended`)),
             )
           );
         },
         resolve(source, args, context) {
           return source;
         }
-      }
+      },
     },
   }
 });
